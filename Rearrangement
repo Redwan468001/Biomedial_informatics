@@ -1,0 +1,86 @@
+#This function calculate Hamming similarities
+def HammingSimilarities(s1, s2):
+    score = 0
+    l = len(s1)
+    for i in range(l):
+        if s1[i] == s2[i]:
+            score += 1
+    return score
+
+# This function generates fragment segments and assesses their similarity.
+def Similarities(healthy_chromosome, chromothripsis):
+
+    dict = {}
+
+    length_hc = len(healthy_chromosome)
+    length_ch = len(chromothripsis)
+
+    if length_hc > length_ch:
+        l = length_ch // 4
+    else:
+        l = length_hc // 4
+    #define pattern length
+    for k in range(5, l + 1, 1):
+        primary_dict = {}
+        #Creating fragments of chromothripsis
+        for i in range(0, length_ch - k + 1, k):
+            #creating fragments of healthy chromosome
+            for j in range(length_hc - k + 1):
+                s = HammingSimilarities(healthy_chromosome[j:j+k], chromothripsis[i:i+k]) / k
+                primary_dict[healthy_chromosome[j:j+k], chromothripsis[i:i+k]] = s
+        #Store only maximum value
+        m = max(primary_dict.values())
+        for key, v in primary_dict.items():
+            if m == v and v > 0:
+                dict[key] = v
+    return dict
+
+# This function remove same fragments from dictionary
+def SortingDict(dict):
+    dict_copy = dict.copy()
+    for key, value in dict.items():
+        if any(key != k and key[0] in k[0] and value != v and value < v for k, v in dict.items()):
+            del dict_copy[key]
+    return dict_copy
+
+#This function locate the regions of highest similarity in both the healthy chromosome and instances of chromothripsis
+def Locations(dict):
+    locations_of_hcrom = {}
+    locations_of_chrpsis = {}
+    for key in dict.keys():
+        locations_of_hcrom[key[0]] = healthy_chromosome.find(key[0])
+        locations_of_chrpsis[key[1]] = chromothripsis.find(key[1])
+    return locations_of_hcrom, locations_of_chrpsis
+
+# This function measure rearrangement
+def Rearrangement(healthy_chromosome, chromothripsis):
+
+    rearrangment = 0
+
+    dict = Similarities(healthy_chromosome, chromothripsis)
+    sorting = SortingDict(dict)
+
+    locations_of_hcrom = {}
+    locations_of_chrpsis = {}
+
+    for key, v in sorting.items():
+        locations_of_hcrom[key[0]] = healthy_chromosome.find(key[0])
+        locations_of_chrpsis[key[1]] = chromothripsis.find(key[1])
+
+    for i in range(len(locations_of_chrpsis)):
+        if int(list(locations_of_hcrom.values())[i]) != int(list(locations_of_chrpsis.values())[i]):
+            rearrangment += 1
+    return rearrangment
+
+
+healthy_chromosome = 'GATAGATATGCCGAAGAGAACAGTAAAATAGTAGAGTGTACGTAGGATAGAGATAGA'
+chromothripsis = 'GATAGAGAGAAATGCCGAGATAGAGTGTAGATAGAATATAAA'
+
+score = Rearrangement(healthy_chromosome, chromothripsis)
+similarity = Similarities(healthy_chromosome, chromothripsis)
+location = Locations(SortingDict(similarity))
+locations_of_hcrom, locations_of_chrpsis = location
+print("Loctions of hltcrom", locations_of_hcrom)
+print("Loctions of Chrpsis", locations_of_chrpsis)
+print("Total number of fragment", len(locations_of_chrpsis))
+print("Rearrangement occur in", score, 'possitions')
